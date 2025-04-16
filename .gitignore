@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual Environment
+venv/
+env/
+ENV/
+
+# Django Migrations (if you want to ignore them all)
+**/migrations/
+!*/migrations/__init__.py
+
+# Django stuff
+*.log
+*.pot
+*.pyc
+db.sqlite3
+db.sqlite3-journal
+
+# dotenv
+.env
+.env.*
+
+# VSCode
+.vscode/
+
+# Mac OS
+.DS_Store
+
+# PyCharm
+.idea/
+
+# Byte-compiled files
+*.pyc
+*.pyo
+*.pyd
+*.pyc.*
+
+# Others
+*.bak
+*.swp
+*.swo
