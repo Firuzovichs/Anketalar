@@ -17,7 +17,7 @@ SECRET_KEY = 'django-insecure-g*(ko)gb8-jmy#2q187r@3cxzu=7%o4o88-==balz77c41t(4#
 DEBUG = True
 RECAPTCHA_SECRET_KEY = '6LdikRorAAAAAFIYtPl6zYOs53deSwN4A5B1lu2Y'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['10.100.0.28']
 
 
 # Application definition
@@ -124,7 +124,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
-
+import os
+STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
