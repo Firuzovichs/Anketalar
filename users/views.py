@@ -56,7 +56,7 @@ class SomeProtectedAPIView(APIView):
 class FilteredUserProfileAPIView(APIView):
     permission_classes = [IsAuthenticated]
     def get(self, request):
-        token = request.headers.get('Authorization')
+        token = request.data.get('Authorization')
         if not token:
             return Response({'detail': 'Token is required.'}, status=status.HTTP_401_UNAUTHORIZED)
 
