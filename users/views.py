@@ -14,6 +14,7 @@ from .serializers import FullUserProfileSerializer  # Quyida serializerni ham yo
 from .functions import deduct_request_from_token,haversine_distance
 from rest_framework.permissions import IsAuthenticated
 import requests
+from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED, HTTP_403_FORBIDDEN, HTTP_404_NOT_FOUND
 
 class NearbyProfilesAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -330,22 +331,32 @@ class LoginView(APIView):
         password = request.data.get('password')
 
         if not identifier or not password:
-            return Response({'error': 'Email/Phone and password required'}, status=400)
+            return Response({'error': 'Email/Phone and password required'}, status=HTTP_400_BAD_REQUEST)
 
         try:
             user = CustomUser.objects.get(email=identifier) if '@' in identifier else CustomUser.objects.get(phone=identifier)
         except CustomUser.DoesNotExist:
-            return Response({'error': 'User not found'}, status=404)
+            return Response({'error': 'User not found'}, status=HTTP_404_NOT_FOUND)
 
         if not user.check_password(password):
-            return Response({'error': 'Incorrect password'}, status=401)
+            return Response({'error': 'Incorrect password'}, status=HTTP_401_UNAUTHORIZED)
 
         if not user.is_active:
-            return Response({'error': 'User is inactive'}, status=403)
+            return Response({'error': 'User is inactive'}, status=HTTP_403_FORBIDDEN)
 
         # JWT tokenlar
         refresh = RefreshToken.for_user(user)
         access_token = str(refresh.access_token)
+
+        # User profile ma'lumotlari
+        try:
+            profile = user.profile
+            gender = profile.gender
+            birth_year = profile.birth_year
+            age = date.today().year - birth_year if birth_year else None
+        except:
+            gender = None
+            age = None
 
         return Response({
             'message': 'Login successful',
@@ -357,6 +368,8 @@ class LoginView(APIView):
                 'email': user.email,
                 'phone': user.phone,
                 'name': user.name,
+                'gender': gender,
+                'age': age,
             }
         }, status=200)
 
