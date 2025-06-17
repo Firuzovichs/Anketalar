@@ -14,6 +14,7 @@ from .serializers import FullUserProfileSerializer  # Quyida serializerni ham yo
 from .functions import deduct_request_from_token,haversine_distance
 from rest_framework.permissions import IsAuthenticated
 import requests
+
 class NearbyProfilesAPIView(APIView):
     permission_classes = [IsAuthenticated]
     def get(self, request):
@@ -61,7 +62,6 @@ class FilteredUserProfileAPIView(APIView):
 
         try:
             user = CustomUser.objects.get(token=token)
-            profile = user.profile
         except CustomUser.DoesNotExist:
             return Response({'detail': 'Invalid token.'}, status=status.HTTP_401_UNAUTHORIZED)
         except Exception:
