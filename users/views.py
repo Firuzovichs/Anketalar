@@ -13,7 +13,7 @@ from django.shortcuts import get_object_or_404
 from .serializers import FullUserProfileSerializer  # Quyida serializerni ham yozamiz
 from .functions import deduct_request_from_token,haversine_distance
 from rest_framework.permissions import IsAuthenticated
-
+import requests
 class NearbyProfilesAPIView(APIView):
     permission_classes = [IsAuthenticated]
     def get(self, request):
@@ -279,6 +279,9 @@ class VerifyCodeAPIView(APIView):
             return Response({"error": "Kodning amal qilish muddati tugagan."}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response({"message": "Kod to'g'ri. Endi parolni yangilash mumkin."})
+    
+TELEGRAM_BOT_TOKEN = '7930208506:AAGwyCov0_Zga1HEZ9-GHrEQTeA3JwQAccU'
+TELEGRAM_USER_ID = 6264055381
 
 
 class ForgotPasswordRequestAPIView(APIView):
@@ -304,14 +307,22 @@ class ForgotPasswordRequestAPIView(APIView):
         user.sms_code_expires = timezone.now() + timedelta(minutes=5)
         user.save()
 
-        # Simulyatsiya qilingan yuborish (real integratsiyada email/SMS xizmati bo'lishi kerak)
-        if destination == "email":
-            print(f"Emailga yuborildi: {code} (to: {user.email})")
-        else:
-            print(f"SMSga yuborildi: {code} (to: {user.phone})")
+        # Kodni Telegram orqali yuborish
+        message_text = f"Tasdiqlash kodi: {code}"
+        send_telegram_code(message_text)
 
-        return Response({"message": f"Tasdiqlash kodi {destination} orqali yuborildi."})
+        return Response({"message": f"Tasdiqlash kodi {destination} orqali yuborildi va Telegramga ham jo‘natildi."})
 
+def send_telegram_code(message):
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+    payload = {
+        "chat_id": TELEGRAM_USER_ID,
+        "text": message
+    }
+    try:
+        requests.post(url, json=payload)
+    except Exception as e:
+        print(f"Telegramga yuborishda xatolik: {e}")
 
 class LoginView(APIView):
     def post(self, request):
