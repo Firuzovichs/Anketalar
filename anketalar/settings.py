@@ -27,7 +27,7 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', cast=bool)
 
-ALLOWED_HOSTS=['localhost','127.0.0.1','192.168.1.181','192.168.1.255']
+ALLOWED_HOSTS=['localhost','127.0.0.1','192.168.1.181','192.168.1.255','bank1.pochta.uz']
 
 
 # Application definition
