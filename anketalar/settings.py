@@ -29,6 +29,12 @@ DEBUG = config('DEBUG', cast=bool)
 
 ALLOWED_HOSTS=['localhost','127.0.0.1','192.168.1.181','192.168.1.255','bank1.pochta.uz']
 
+SECURE_SSL_REDIRECT = False
+
+
+CSRF_COOKIE_HTTPONLY = True
+CSRF_TRUSTED_ORIGINS = ['https://bank1.pochta.uz']
+CSRF_COOKIE_DOMAIN = 'bank1.pochta.uz'
 
 # Application definition
 
