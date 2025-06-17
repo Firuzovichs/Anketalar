@@ -64,16 +64,19 @@ class FilteredUserProfileAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        token = request.headers.get('user_token')
-        if not token:
-            return Response({'detail': 'Token is required.'}, status=status.HTTP_401_UNAUTHORIZED)
+        
 
+        user = request.user  
+
+        if not user.is_authenticated:
+            return Response({'detail': 'User is not authenticated.'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        # endi user orqali profilni, extensionni va hokazolarni olishingiz mumkin:
         try:
-            user = CustomUser.objects.get(token=token)
-        except CustomUser.DoesNotExist:
-            return Response({'detail': 'Invalid token.'}, status=status.HTTP_401_UNAUTHORIZED)
-        except Exception:
+            profile = user.profile
+        except:
             return Response({'detail': 'Profile or extension not found.'}, status=status.HTTP_400_BAD_REQUEST)
+
 
         # Age filter
         min_age = int(request.query_params.get('min_age', 0))
