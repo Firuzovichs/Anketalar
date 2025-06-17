@@ -30,7 +30,7 @@ class UserImageSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ['uuid', 'name', 'email', 'phone']
+        fields = ['name', 'email', 'phone']
 
 class UserProfileExtensionSerializer(serializers.ModelSerializer):
     class Meta:
@@ -42,16 +42,12 @@ class FullUserProfileSerializer(serializers.ModelSerializer):
     purposes = PurposeSerializer(many=True)
     interests = InterestSerializer(many=True)
     images = UserImageSerializer(many=True)
-    extension = serializers.SerializerMethodField()
 
     class Meta:
         model = UserProfile
         fields = [
             'user', 'birth_year', 'gender', 'region', 'district', 'latitude', 'longitude',
-            'purposes', 'interests', 'images', 'extension'
+            'purposes', 'interests', 'images'
         ]
 
-    def get_extension(self, obj):
-        if hasattr(obj, 'extension'):
-            return UserProfileExtensionSerializer(obj.extension).data
-        return None
+    
