@@ -15,6 +15,13 @@ from .functions import deduct_request_from_token,haversine_distance
 from rest_framework.permissions import IsAuthenticated
 import requests
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED, HTTP_403_FORBIDDEN, HTTP_404_NOT_FOUND
+from rest_framework.pagination import PageNumberPagination
+
+class UserProfilePagination(PageNumberPagination):
+    page_size = 10  # Har bir sahifada nechta element
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
 
 class NearbyProfilesAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -53,9 +60,9 @@ class SomeProtectedAPIView(APIView):
         return deduct_request_from_token(token)
 
 
-
 class FilteredUserProfileAPIView(APIView):
     permission_classes = [IsAuthenticated]
+
     def get(self, request):
         token = request.data.get('Authorization')
         if not token:
@@ -67,8 +74,6 @@ class FilteredUserProfileAPIView(APIView):
             return Response({'detail': 'Invalid token.'}, status=status.HTTP_401_UNAUTHORIZED)
         except Exception:
             return Response({'detail': 'Profile or extension not found.'}, status=status.HTTP_400_BAD_REQUEST)
-
-        
 
         # Age filter
         min_age = int(request.query_params.get('min_age', 0))
@@ -82,31 +87,30 @@ class FilteredUserProfileAPIView(APIView):
             birth_year__lte=max_birth_year
         ).exclude(user=user)
 
-        # Purpose filter (ManyToMany)
+        # Purpose filter
         purpose_ids = request.query_params.getlist('purposes')
         if purpose_ids:
             queryset = queryset.filter(purposes__id__in=purpose_ids).distinct()
 
-        # Interest filter (ManyToMany)
+        # Interest filter
         interest_ids = request.query_params.getlist('interests')
         if interest_ids:
             queryset = queryset.filter(interests__id__in=interest_ids).distinct()
 
-        # Region filter (CharField)
+        # Region/District
         region = request.query_params.get('region')
         if region:
             queryset = queryset.filter(region__iexact=region)
 
-        # District filter (CharField)
         district = request.query_params.get('district')
         if district:
             queryset = queryset.filter(district__iexact=district)
 
-
-        serializer = FullUserProfileSerializer(queryset, many=True, context={'request': request})
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-
+        # === PAGINATION ===
+        paginator = UserProfilePagination()
+        paginated_queryset = paginator.paginate_queryset(queryset, request)
+        serializer = FullUserProfileSerializer(paginated_queryset, many=True, context={'request': request})
+        return paginator.get_paginated_response(serializer.data)
 
 
 class SendRequestAPIView(APIView):
