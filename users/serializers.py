@@ -30,7 +30,7 @@ class UserImageSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ['name', 'email', 'phone']
+        fields = ['name']
 
 class UserProfileExtensionSerializer(serializers.ModelSerializer):
     class Meta:
@@ -46,7 +46,7 @@ class FullUserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
         fields = [
-            'user', 'birth_year', 'gender', 'region', 'district', 'latitude', 'longitude',
+            'user', 'birth_year', 'gender', 'weight','height','region', 'district', 'latitude', 'longitude',
             'purposes', 'interests', 'images'
         ]
 
