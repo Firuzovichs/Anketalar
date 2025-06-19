@@ -17,6 +17,7 @@ import requests
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED, HTTP_403_FORBIDDEN, HTTP_404_NOT_FOUND
 from rest_framework.pagination import PageNumberPagination
 
+
 class UserProfilePagination(PageNumberPagination):
     page_size = 30 # Har bir sahifada nechta element
     page_size_query_param = 'page_size'

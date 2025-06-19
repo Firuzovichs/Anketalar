@@ -96,6 +96,8 @@ class UserProfile(models.Model):
     district = models.CharField(max_length=255, blank=True, null=True)
     latitude = models.FloatField(blank=True, null=True)
     longitude = models.FloatField(blank=True, null=True)
+    weight = models.FloatField(blank=True,null=True)
+    height  = models.FloatField(blank=True,null=True)
 
     purposes = models.ManyToManyField(Purpose, blank=True)
     interests = models.ManyToManyField(Interest, blank=True)
