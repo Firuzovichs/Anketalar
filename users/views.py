@@ -23,9 +23,9 @@ class UserProfilePagination(PageNumberPagination):
     page_size_query_param = 'page_size'
     max_page_size = 100
 
-
 class NearbyProfilesAPIView(APIView):
     permission_classes = [IsAuthenticated]
+
     def get(self, request):
         try:
             user_lat = float(request.query_params.get('lat'))
@@ -39,6 +39,9 @@ class NearbyProfilesAPIView(APIView):
         for profile in all_profiles:
             distance = haversine_distance(user_lat, user_lon, profile.latitude, profile.longitude)
             if distance <= 5:
+                main_image = profile.images.filter(is_main=True).first()
+                image_url = request.build_absolute_uri(main_image.image.url) if main_image else None
+
                 nearby_profiles.append({
                     'id': profile.id,
                     'email': profile.user.email,
@@ -46,10 +49,10 @@ class NearbyProfilesAPIView(APIView):
                     'distance_km': round(distance, 2),
                     'lat': profile.latitude,
                     'lon': profile.longitude,
+                    'image': image_url,
                 })
 
         return Response({'nearby_profiles': nearby_profiles}, status=status.HTTP_200_OK)
-
 
 class SomeProtectedAPIView(APIView):
     permission_classes = [IsAuthenticated]
