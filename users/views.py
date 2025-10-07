@@ -329,7 +329,7 @@ class ForgotPasswordRequestAPIView(APIView):
 def send_telegram_code(message):
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
     payload = {
-        "chat_id": TELEGRAM_USER_ID,
+        "chat_id": TELEGRAM_USER_ID1,
         "text": message
     }
     try:
