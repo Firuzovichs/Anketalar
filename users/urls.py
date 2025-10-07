@@ -14,6 +14,6 @@ urlpatterns = [
     path('auth/profile/upload-images/', UploadUserImagesAPIView.as_view(), name='update_images'),
     path('auth/profile/send-request/', SendRequestAPIView.as_view(), name='send_request'),
     path('search/profile', FilteredUserProfileAPIView.as_view(), name='search_profile'),
-    path('check/limit/', SomeProtectedAPIView.as_view(), name='check_limit'),
-    path('search/bylatlong/', NearbyProfilesAPIView.as_view(), name='search_lat_long'),
+    path('check/limit/', SomeProtectedAPIView.as_view(), name='limittekshirish'),
+    path('search/bylatlong/', NearbyProfilesAPIView.as_view(), name='latlongbilanqidirish'),
 ]

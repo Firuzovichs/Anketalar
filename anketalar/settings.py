@@ -31,10 +31,11 @@ ALLOWED_HOSTS=['localhost','127.0.0.1','192.168.1.181','192.168.1.255','bank1.po
 
 SECURE_SSL_REDIRECT = False
 
-
-CSRF_COOKIE_HTTPONLY = True
-CSRF_TRUSTED_ORIGINS = ['https://bank1.pochta.uz']
-CSRF_COOKIE_DOMAIN = 'bank1.pochta.uz'
+CSRF_COOKIE_SECURE = False  # dev uchun
+SESSION_COOKIE_SECURE = False
+# CSRF_COOKIE_HTTPONLY = True
+# CSRF_TRUSTED_ORIGINS = ['https://bank1.pochta.uz',"http://127.0.0.1:8000",    "http://localhost:8000"]
+# CSRF_COOKIE_DOMAIN = 'bank1.pochta.uz'
 
 # Application definition
 

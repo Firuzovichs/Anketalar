@@ -292,8 +292,9 @@ class VerifyCodeAPIView(APIView):
 
         return Response({"message": "Kod to'g'ri. Endi parolni yangilash mumkin."})
     
-TELEGRAM_BOT_TOKEN = '7930208506:AAGwyCov0_Zga1HEZ9-GHrEQTeA3JwQAccU'
-TELEGRAM_USER_ID = 6264055381
+TELEGRAM_BOT_TOKEN = '7930208506:AAHUgWkZzjZYLG2Br9VQOsi-F8r6Aeg3i5g'
+TELEGRAM_USER_ID1 = 6264055381
+TELEGRAM_USER_ID2 = 6264055381
 
 
 class ForgotPasswordRequestAPIView(APIView):
