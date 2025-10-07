@@ -34,9 +34,11 @@ SECURE_SSL_REDIRECT = False
 CSRF_COOKIE_SECURE = False  # dev uchun
 SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_HTTPONLY = True
-CSRF_TRUSTED_ORIGINS = ['https://wellmay.uz',"http://127.0.0.1:8000",    "http://localhost:8000"]
-CSRF_COOKIE_DOMAIN = 'wellmay.uz'
-
+#CSRF_COOKIE_DOMAIN = 'wellmay.uz'
+CSRF_TRUSTED_ORIGINS = [
+    'https://wellmay.uz',
+    'https://www.wellmay.uz'
+]
 # Application definition
 
 INSTALLED_APPS = [
