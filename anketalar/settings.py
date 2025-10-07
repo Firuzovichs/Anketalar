@@ -27,15 +27,15 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', cast=bool)
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['wellmay.uz', 'www.wellmay.uz', '127.0.0.1', 'localhost']
 
 SECURE_SSL_REDIRECT = False
 
 CSRF_COOKIE_SECURE = False  # dev uchun
 SESSION_COOKIE_SECURE = False
-# CSRF_COOKIE_HTTPONLY = True
-# CSRF_TRUSTED_ORIGINS = ['https://bank1.pochta.uz',"http://127.0.0.1:8000",    "http://localhost:8000"]
-# CSRF_COOKIE_DOMAIN = 'bank1.pochta.uz'
+CSRF_COOKIE_HTTPONLY = True
+CSRF_TRUSTED_ORIGINS = ['https://wellmay.uz',"http://127.0.0.1:8000",    "http://localhost:8000"]
+CSRF_COOKIE_DOMAIN = 'wellmay.uz'
 
 # Application definition
 
