@@ -27,7 +27,7 @@ SECRET_KEY = config('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', cast=bool)
 
-ALLOWED_HOSTS = ['wellmay.uz', 'www.wellmay.uz', '127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['.wellmay.uz', 'wellmay.uz', 'www.wellmay.uz', 'localhost', '127.0.0.1', '[::1]']
 
 SECURE_SSL_REDIRECT = False
 
