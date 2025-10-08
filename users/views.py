@@ -10,12 +10,31 @@ import random
 import secrets
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.shortcuts import get_object_or_404
-from .serializers import FullUserProfileSerializer  # Quyida serializerni ham yozamiz
+from .serializers import FullUserProfileSerializer,CustomUserSerializer  # Quyida serializerni ham yozamiz
 from .functions import deduct_request_from_token,haversine_distance
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 import requests
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED, HTTP_403_FORBIDDEN, HTTP_404_NOT_FOUND
 from rest_framework.pagination import PageNumberPagination
+
+
+
+class GetUserByTokenAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        token = request.query_params.get('token')
+        if not token:
+            return Response({'error': 'Token is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = CustomUser.objects.select_related('profile').get(token=token)
+        except CustomUser.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = CustomUserSerializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 
 class UserProfilePagination(PageNumberPagination):

@@ -50,4 +50,31 @@ class FullUserProfileSerializer(serializers.ModelSerializer):
             'purposes', 'interests', 'images'
         ]
 
-    
+class UserProfileSerializer(serializers.ModelSerializer):
+    purposes = PurposeSerializer(many=True, read_only=True)
+    interests = InterestSerializer(many=True, read_only=True)
+    images = UserImageSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = UserProfile
+        fields = [
+            'id',
+            'birth_year',
+            'gender',
+            'region',
+            'district',
+            'latitude',
+            'longitude',
+            'weight',
+            'height',
+            'purposes',
+            'interests',
+            'images'
+        ]
+
+class CustomUserSerializer(serializers.ModelSerializer):
+    profile = UserProfileSerializer(read_only=True)
+
+    class Meta:
+        model = CustomUser
+        fields = ['uuid', 'name', 'phone', 'email', 'token', 'profile']
