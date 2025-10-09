@@ -39,7 +39,9 @@ CSRF_TRUSTED_ORIGINS = [
     'https://wellmay.uz',
     'https://www.wellmay.uz',
     'https://dev.anketalar.uz',
-    'http://dev.anketalar.uz'
+    'http://dev.anketalar.uz',
+    'http://localhost:8081',
+    'http://localhost:8080'
 ]
 # Application definition
 
