@@ -101,6 +101,12 @@ class UserProfile(models.Model):
 
     purposes = models.ManyToManyField(Purpose, blank=True)
     interests = models.ManyToManyField(Interest, blank=True)
+    
+    bio = models.TextField(blank=True, null=True)  # Foydalanuvchi haqida qisqacha ma’lumot
+
+    telegram_link = models.URLField(blank=True, null=True)
+    instagram_link = models.URLField(blank=True, null=True)
+    tiktok_link = models.URLField(blank=True, null=True)
 
     def __str__(self):
         return f"Profile of {self.user.email}"

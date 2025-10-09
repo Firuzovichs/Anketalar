@@ -19,6 +19,82 @@ from rest_framework.pagination import PageNumberPagination
 
 
 
+class UpdateUserProfileAPIView(APIView):
+    permission_classes = [IsAuthenticated]  # Agar faqat token asosida bo‘lsa, IsAuthenticated shart emas
+
+    def get_user_from_request(self, request):
+        """
+        Foydalanuvchini Bearer token yoki ?user_token= orqali aniqlaydi
+        """
+        query_token = request.query_params.get("user_token")
+
+        token = None
+        
+
+        # Agar header bo‘sh yoki topilmasa, query_token’ni ishlatamiz
+        if not token and query_token:
+            token = query_token.strip()
+
+        if not token:
+            return None
+
+        user = CustomUser.objects.filter(token=token).first()
+        return user
+
+    def patch(self, request):
+        user = self.get_user_from_request(request)
+        if not user:
+            return Response({"detail": "Token xato yoki topilmadi."}, status=status.HTTP_401_UNAUTHORIZED)
+
+        profile, _ = UserProfile.objects.get_or_create(user=user)
+
+        data = request.data
+        updated_fields = []
+
+        # Email tekshirish
+        email = data.get("email")
+        if email and email != user.email:
+            if CustomUser.objects.filter(email=email).exclude(id=user.id).exists():
+                return Response({"error": "Bu email boshqa foydalanuvchida mavjud."}, status=status.HTTP_400_BAD_REQUEST)
+            user.email = email
+            updated_fields.append("email")
+
+        # Telefon tekshirish
+        phone = data.get("phone")
+        if phone and phone != user.phone:
+            if CustomUser.objects.filter(phone=phone).exclude(id=user.id).exists():
+                return Response({"error": "Bu telefon raqam boshqa foydalanuvchida mavjud."}, status=status.HTTP_400_BAD_REQUEST)
+            user.phone = phone
+            updated_fields.append("phone")
+
+        # Oddiy maydonlar
+        if "name" in data:
+            user.name = data.get("name")
+            updated_fields.append("name")
+
+        # Profil maydonlari
+        profile_fields = [
+            "birth_year", "gender", "region", "district",
+            "weight", "height", "bio",
+            "telegram_link", "instagram_link", "tiktok_link"
+        ]
+
+        for field in profile_fields:
+            if field in data:
+                setattr(profile, field, data.get(field))
+                updated_fields.append(field)
+
+        user.save()
+        profile.save()
+
+        return Response({
+            "message": "Maʼlumotlar muvaffaqiyatli yangilandi.",
+            "updated_fields": updated_fields
+        }, status=status.HTTP_200_OK)
+
+
+
+
 class GetUserByTokenAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
