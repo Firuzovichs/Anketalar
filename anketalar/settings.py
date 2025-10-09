@@ -38,8 +38,8 @@ CSRF_COOKIE_HTTPONLY = True
 CSRF_TRUSTED_ORIGINS = [
     'https://wellmay.uz',
     'https://www.wellmay.uz',
-    'https://dev.anketalar.uz/',
-    'http://dev.anketalar.uz/'
+    'https://dev.anketalar.uz',
+    'http://dev.anketalar.uz'
 ]
 # Application definition
 
