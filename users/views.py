@@ -16,8 +16,102 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 import requests
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED, HTTP_403_FORBIDDEN, HTTP_404_NOT_FOUND
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
+from django.db import transaction
+from django.core.exceptions import ValidationError
+MAX_IMAGES_PER_USER = 5
 
+class UserImageAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
+    # ✅ Rasm yuklash
+    def post(self, request):
+        user = request.user
+        profile = UserProfile.objects.filter(user=user).first()
+        if not profile:
+            return Response({"detail": "Profil topilmadi."}, status=404)
+
+        images = request.FILES.getlist("images")
+        if not images:
+            return Response({"error": "Rasmlar yuborilmadi."}, status=400)
+
+        # mavjud rasm soni (faqat profile bilan bog'langanlar)
+        current_count = UserImage.objects.filter(user_profile=profile).count()
+        allowed = MAX_IMAGES_PER_USER - current_count
+        if allowed <= 0:
+            return Response(
+                {"error": f"Sizda allaqachon {MAX_IMAGES_PER_USER} ta rasm bor. Yangi rasm yuklab boʻlmaydi."},
+                status=400
+            )
+
+        if len(images) > allowed:
+            return Response(
+                {"error": f"Siz faqat {allowed} ta rasm qoʻshishingiz mumkin (jami maksimal {MAX_IMAGES_PER_USER})."},
+                status=400
+            )
+
+        main_index = request.data.get("main_index")
+        if main_index is not None:
+            try:
+                main_index = int(main_index)
+            except ValueError:
+                main_index = None
+
+        if main_index is not None:
+            UserImage.objects.filter(user_profile=profile, is_main=True).update(is_main=False)
+
+        uploaded = []
+        # transaction bilan qilsak, hammasi yoki hech narsa saqlanadi
+        with transaction.atomic():
+            for idx, img in enumerate(images):
+                is_main = (idx == main_index)
+                user_img = UserImage.objects.create(
+                    user_profile=profile,
+                    image=img,
+                    is_main=is_main
+                )
+                uploaded.append({
+                    "id": user_img.id,
+                    "url": user_img.image.url,
+                    "is_main": user_img.is_main
+                })
+
+        return Response({
+            "message": "Rasmlar muvaffaqiyatli yuklandi.",
+            "count": len(uploaded),
+            "uploaded": uploaded
+        }, status=201)
+
+    # ✅ Rasmni asosiy qilish yoki uzish
+    def patch(self, request):
+        user = request.user
+        profile = UserProfile.objects.filter(user=user).first()
+        if not profile:
+            return Response({"detail": "Profil topilmadi."}, status=404)
+
+        img_id = request.data.get("id")
+        if not img_id:
+            return Response({"error": "Rasm ID yuborilmadi."}, status=400)
+
+        user_image = UserImage.objects.filter(id=img_id, user_profile=profile).first()
+        if not user_image:
+            return Response({"error": "Rasm topilmadi yoki sizga tegishli emas."}, status=404)
+
+        # 🔄 Asosiy qilish
+        if str(request.data.get("is_main", "")).lower() == "true":
+            UserImage.objects.filter(user_profile=profile, is_main=True).update(is_main=False)
+            user_image.is_main = True
+            user_image.save()
+            return Response({"message": "Asosiy rasm o‘rnatildi.", "id": user_image.id})
+
+        # 🔗 Uzib qo‘yish
+        if str(request.data.get("unlink", "")).lower() == "true":
+            user_image.user_profile = None
+            user_image.save()
+            return Response({"message": "Rasm foydalanuvchidan uzildi.", "id": img_id})
+
+        return Response({"message": "Hech qanday amal bajarilmadi."})
 
 class UpdateUserProfileAPIView(APIView):
     permission_classes = [IsAuthenticated]

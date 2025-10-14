@@ -1,10 +1,12 @@
 
 from django.urls import path
-from .views import UpdateUserProfileAPIView,GetUserByTokenAPIView,NearbyProfilesAPIView,SomeProtectedAPIView,FilteredUserProfileAPIView,SendRequestAPIView,UploadUserImagesAPIView,ProfileUpdateAPIView,RequestSMSCodeView, VerifySMSCodeView,LoginView,ForgotPasswordRequestAPIView,VerifyCodeAPIView,ResetPasswordAPIView
+from .views import UserImageAPIView,UpdateUserProfileAPIView,GetUserByTokenAPIView,NearbyProfilesAPIView,SomeProtectedAPIView,FilteredUserProfileAPIView,SendRequestAPIView,UploadUserImagesAPIView,ProfileUpdateAPIView,RequestSMSCodeView, VerifySMSCodeView,LoginView,ForgotPasswordRequestAPIView,VerifyCodeAPIView,ResetPasswordAPIView
 
 
 urlpatterns = [
+
     path('profile-datas/', GetUserByTokenAPIView.as_view(), name='get_data_profile'),
+    path('profile-image-update/', UserImageAPIView.as_view(), name='update_image_profile'),
     path('profile-data-update/', UpdateUserProfileAPIView.as_view(), name='update_data_profile'),
     path('auth/request-code/', RequestSMSCodeView.as_view(), name='request_sms_code'),
     path('auth/verify-code/', VerifySMSCodeView.as_view(), name='verify_sms_code'),

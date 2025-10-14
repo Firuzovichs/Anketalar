@@ -117,21 +117,16 @@ def user_image_upload_path(instance, filename):
     return f"user_images/{instance.user_profile.user.id}/{filename}"
 
 class UserImage(models.Model):
-    user_profile = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='images')
+    user_profile = models.ForeignKey(
+        UserProfile,
+        on_delete=models.SET_NULL,
+        related_name='images',
+        null=True,  # 🔥 bu kerak
+        blank=True
+    )
     image = models.ImageField(upload_to=user_image_upload_path)
     is_main = models.BooleanField(default=False)
     is_auth = models.BooleanField(default=False)
-    def __str__(self):
-        return f"Image for {self.user_profile.user.email} (Main: {self.is_main})"
-
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=['user_profile'],
-                condition=models.Q(is_main=True),
-                name='unique_main_image_per_user'
-            )
-        ]
 
 class UserProfileExtension(models.Model):
     user_profile = models.OneToOneField(UserProfile, on_delete=models.CASCADE, related_name='extension')
