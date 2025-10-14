@@ -20,16 +20,19 @@ from rest_framework.pagination import PageNumberPagination
 
 
 class UpdateUserProfileAPIView(APIView):
-    permission_classes = [IsAuthenticated]  # Agar faqat token asosida bo‘lsa, IsAuthenticated shart emas
+    permission_classes = [IsAuthenticated]
 
     def get_user_from_request(self, request):
         """
         Foydalanuvchini Bearer token yoki ?user_token= orqali aniqlaydi
         """
         query_token = request.query_params.get("user_token")
-
         token = None
-        
+
+        # Header dan token olish
+        auth_header = request.headers.get("Authorization")
+        if auth_header and auth_header.startswith("Bearer "):
+            token = auth_header.split("Bearer ")[1].strip()
 
         # Agar header bo‘sh yoki topilmasa, query_token’ni ishlatamiz
         if not token and query_token:
@@ -38,45 +41,50 @@ class UpdateUserProfileAPIView(APIView):
         if not token:
             return None
 
-        user = CustomUser.objects.filter(token=token).first()
-        return user
+        return CustomUser.objects.filter(token=token).first()
 
     def patch(self, request):
         user = self.get_user_from_request(request)
         if not user:
-            return Response({"detail": "Token xato yoki topilmadi."}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response(
+                {"detail": "Token xato yoki topilmadi."},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
 
         profile, _ = UserProfile.objects.get_or_create(user=user)
-
         data = request.data
         updated_fields = []
 
-        # Email tekshirish
+        # --------- USER FIELDS ----------
         email = data.get("email")
         if email and email != user.email:
             if CustomUser.objects.filter(email=email).exclude(id=user.id).exists():
-                return Response({"error": "Bu email boshqa foydalanuvchida mavjud."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {"error": "Bu email boshqa foydalanuvchida mavjud."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
             user.email = email
             updated_fields.append("email")
 
-        # Telefon tekshirish
         phone = data.get("phone")
         if phone and phone != user.phone:
             if CustomUser.objects.filter(phone=phone).exclude(id=user.id).exists():
-                return Response({"error": "Bu telefon raqam boshqa foydalanuvchida mavjud."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {"error": "Bu telefon raqam boshqa foydalanuvchida mavjud."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
             user.phone = phone
             updated_fields.append("phone")
 
-        # Oddiy maydonlar
         if "name" in data:
             user.name = data.get("name")
             updated_fields.append("name")
 
-        # Profil maydonlari
+        # --------- PROFILE FIELDS ----------
         profile_fields = [
             "birth_year", "gender", "region", "district",
-            "weight", "height", "bio",
-            "telegram_link", "instagram_link", "tiktok_link"
+            "latitude", "longitude", "weight", "height",
+            "bio", "telegram_link", "instagram_link", "tiktok_link"
         ]
 
         for field in profile_fields:
@@ -84,6 +92,25 @@ class UpdateUserProfileAPIView(APIView):
                 setattr(profile, field, data.get(field))
                 updated_fields.append(field)
 
+        # --------- PURPOSES (ManyToMany) ----------
+        if "purposes" in data:
+            purposes_ids = data.get("purposes", [])
+            if isinstance(purposes_ids, str):
+                purposes_ids = purposes_ids.split(",")
+            purposes = Purpose.objects.filter(id__in=purposes_ids)
+            profile.purposes.set(purposes)
+            updated_fields.append("purposes")
+
+        # --------- INTERESTS (ManyToMany) ----------
+        if "interests" in data:
+            interests_ids = data.get("interests", [])
+            if isinstance(interests_ids, str):
+                interests_ids = interests_ids.split(",")
+            interests = Interest.objects.filter(id__in=interests_ids)
+            profile.interests.set(interests)
+            updated_fields.append("interests")
+
+        # Saqlash
         user.save()
         profile.save()
 

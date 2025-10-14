@@ -47,7 +47,7 @@ class FullUserProfileSerializer(serializers.ModelSerializer):
         model = UserProfile
         fields = [
             'user', 'birth_year', 'gender', 'weight','height','region', 'district', 'latitude', 'longitude',
-            'purposes', 'interests', 'images'
+            'purposes', 'interests', 'images','bio', 'instagram_link', 'telegram_link','tiktok_link'
         ]
 
 class UserProfileSerializer(serializers.ModelSerializer):
@@ -69,7 +69,11 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'height',
             'purposes',
             'interests',
-            'images'
+            'images',
+            'bio',
+            'instagram_link',
+            'telegram_link',
+            'tiktok_link'
         ]
 
 class CustomUserSerializer(serializers.ModelSerializer):
