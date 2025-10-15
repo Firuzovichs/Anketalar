@@ -19,6 +19,9 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from django.db import transaction
 from django.core.exceptions import ValidationError
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.exceptions import AuthenticationFailed
+
 MAX_IMAGES_PER_USER = 5
 
 class UserImageAPIView(APIView):
@@ -118,20 +121,20 @@ class UpdateUserProfileAPIView(APIView):
 
     def get_user_from_request(self, request):
         """
-        Foydalanuvchini Bearer token yoki ?user_token= orqali aniqlaydi
+        Foydalanuvchini JWT yoki user_token orqali aniqlaydi
         """
+        # 1️⃣ Avval JWT orqali tekshiramiz
+        auth = JWTAuthentication()
+        try:
+            user, _ = auth.authenticate(request)
+            if user:
+                return user
+        except AuthenticationFailed:
+            pass  # JWT xato bo‘lsa, user_token orqali davom etamiz
+
+        # 2️⃣ Keyin user_token orqali
         query_token = request.query_params.get("user_token")
-        token = None
-
-        # Header dan token olish
-        auth_header = request.headers.get("Authorization")
-        if auth_header and auth_header.startswith("Bearer "):
-            token = auth_header.split("Bearer ")[1].strip()
-
-        # Agar header bo‘sh yoki topilmasa, query_token’ni ishlatamiz
-        if not token and query_token:
-            token = query_token.strip()
-
+        token = query_token.strip() if query_token else None
         if not token:
             return None
 
