@@ -119,10 +119,9 @@ def user_image_upload_path(instance, filename):
 class UserImage(models.Model):
     user_profile = models.ForeignKey(
         UserProfile,
-        on_delete=models.SET_NULL,
-        related_name='images',
-        null=True,  # 🔥 bu kerak
-        blank=True
+        on_delete=models.CASCADE,
+        null=True,  # 🔥 null bo‘lishiga ruxsat
+        blank=True  # 🔥 formalar uchun
     )
     image = models.ImageField(upload_to=user_image_upload_path)
     is_main = models.BooleanField(default=False)
