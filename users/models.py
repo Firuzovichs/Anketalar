@@ -121,7 +121,8 @@ class UserImage(models.Model):
         UserProfile,
         on_delete=models.CASCADE,
         null=True,  # 🔥 null bo‘lishiga ruxsat
-        blank=True  # 🔥 formalar uchun
+        blank=True,
+        related_name='images'  # 🔥 formalar uchun
     )
     image = models.ImageField(upload_to=user_image_upload_path)
     is_main = models.BooleanField(default=False)
