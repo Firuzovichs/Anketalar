@@ -10,7 +10,7 @@ import random
 import secrets
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.shortcuts import get_object_or_404
-from .serializers import FullUserProfileSerializer,CustomUserSerializer,PurposeSerializer,InterestSerializer  # Quyida serializerni ham yozamiz
+from .serializers import FullUserProfileSerializer,CustomUserSerializer,PurposeSerializer,InterestSerializer,RegionSerializer,DistrictSerializer  # Quyida serializerni ham yozamiz
 from .functions import deduct_request_from_token,haversine_distance
 from rest_framework.permissions import IsAuthenticated, AllowAny
 import requests
@@ -23,6 +23,33 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 
 MAX_IMAGES_PER_USER = 5
+
+
+class RegionListAPIView(APIView):
+    """
+    Barcha viloyatlarni olish uchun API
+    GET /api/regions/
+    """
+    def get(self, request):
+        regions = Region.objects.all()
+        serializer = RegionSerializer(regions, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class DistrictListAPIView(APIView):
+    """
+    Tumanlarni olish uchun API
+    GET /api/districts/?region_id=1
+    """
+    def get(self, request):
+        region_id = request.query_params.get('region_id', None)
+        if region_id:
+            districts = District.objects.filter(region_id=region_id)
+        else:
+            districts = District.objects.all()
+        
+        serializer = DistrictSerializer(districts, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 class PurposeListAPIView(APIView):
     def get(self, request):
