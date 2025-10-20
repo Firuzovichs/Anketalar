@@ -5,6 +5,32 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, Permis
 from django.utils import timezone
 from datetime import timedelta
 
+class Region(models.Model):
+    name = models.CharField(max_length=255, unique=True)
+
+    class Meta:
+        verbose_name = "Viloyat"
+        verbose_name_plural = "Viloyatlar"
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
+
+
+class District(models.Model):
+    region = models.ForeignKey(Region, on_delete=models.CASCADE, related_name="districts")
+    name = models.CharField(max_length=255)
+
+    class Meta:
+        verbose_name = "Tuman/Shahar"
+        verbose_name_plural = "Tumanlar/Shaharlar"
+        unique_together = ("region", "name")
+        ordering = ["name"]
+
+    def __str__(self):
+        return f"{self.name} ({self.region.name})"
+
+
 class CustomUserManager(BaseUserManager):
     def create_user(self, email, phone, password=None, **extra_fields):
         if not email:
@@ -92,8 +118,8 @@ class UserProfile(models.Model):
     birth_year = models.PositiveIntegerField(blank=True, null=True)
     gender = models.CharField(max_length=10, choices=GENDER_CHOICES, blank=True, null=True)
 
-    region = models.CharField(max_length=255, blank=True, null=True)
-    district = models.CharField(max_length=255, blank=True, null=True)
+    region = models.ForeignKey(Region, on_delete=models.SET_NULL, null=True, blank=True, related_name="profiles")
+    district = models.ForeignKey(District, on_delete=models.SET_NULL, null=True, blank=True, related_name="profiles")
     latitude = models.FloatField(blank=True, null=True)
     longitude = models.FloatField(blank=True, null=True)
     weight = models.FloatField(blank=True,null=True)

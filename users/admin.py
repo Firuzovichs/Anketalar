@@ -1,38 +1,87 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.utils.translation import gettext_lazy as _
-from .models import CustomUser,Purpose,UserImage,UserProfile,Interest,UserProfileExtension
+from .models import (
+    CustomUser,
+    Purpose,
+    UserImage,
+    UserProfile,
+    Interest,
+    UserProfileExtension,
+    Region,
+    District
+)
 
+
+# --- REGION ADMIN ---
+@admin.register(Region)
+class RegionAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name')
+    search_fields = ('name',)
+    ordering = ('name',)
+    list_per_page = 25
+
+
+# --- DISTRICT ADMIN ---
+@admin.register(District)
+class DistrictAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'region')
+    list_filter = ('region',)
+    search_fields = ('name', 'region__name')
+    ordering = ('region', 'name')
+    list_per_page = 25
+
+
+# --- USER PROFILE EXTENSION ---
 @admin.register(UserProfileExtension)
 class UserProfileExtensionAdmin(admin.ModelAdmin):
     list_display = ('user_email', 'requests_left', 'daily_requests_limit', 'last_reset')
     list_filter = ('last_reset',)
     search_fields = ('user_profile__user__email', 'user_profile__user__phone')
     filter_horizontal = ('subscribers', 'requests', 'blocked_users')
+    readonly_fields = ('last_reset',)
 
     def user_email(self, obj):
         return obj.user_profile.user.email
     user_email.short_description = "User Email"
 
 
+# --- INTEREST ADMIN ---
 @admin.register(Interest)
 class InterestAdmin(admin.ModelAdmin):
     list_display = ('id', 'title')
+    search_fields = ('title',)
+    ordering = ('title',)
 
+
+# --- PURPOSE ADMIN ---
 @admin.register(Purpose)
 class PurposeAdmin(admin.ModelAdmin):
     list_display = ('id', 'title')
+    search_fields = ('title',)
+    ordering = ('title',)
 
+
+# --- USER PROFILE ADMIN ---
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
-    list_display = ('id','user', 'birth_year', 'gender', 'region', 'district')
+    list_display = ('id', 'user', 'birth_year', 'gender', 'region', 'district')
+    list_filter = ('gender', 'region', 'district')
+    search_fields = ('user__email', 'user__name', 'region__name', 'district__name')
     filter_horizontal = ('purposes', 'interests')
+    ordering = ('user',)
+    list_per_page = 25
 
+
+# --- USER IMAGE ADMIN ---
 @admin.register(UserImage)
 class UserImageAdmin(admin.ModelAdmin):
     list_display = ('user_profile', 'is_main', 'is_auth')
+    list_filter = ('is_main', 'is_auth')
+    search_fields = ('user_profile__user__email',)
 
 
+# --- CUSTOM USER ADMIN ---
 @admin.register(CustomUser)
 class UserAdmin(BaseUserAdmin):
     ordering = ['-created_at']
