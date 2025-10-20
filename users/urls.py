@@ -1,10 +1,11 @@
 
 from django.urls import path
-from .views import InterestListAPIView,PurposeListAPIView,UserImageAPIView,UpdateUserProfileAPIView,GetUserByTokenAPIView,NearbyProfilesAPIView,SomeProtectedAPIView,FilteredUserProfileAPIView,SendRequestAPIView,UploadUserImagesAPIView,ProfileUpdateAPIView,RequestSMSCodeView, VerifySMSCodeView,LoginView,ForgotPasswordRequestAPIView,VerifyCodeAPIView,ResetPasswordAPIView
+from .views import RegionListAPIView,DistrictListAPIView,InterestListAPIView,PurposeListAPIView,UserImageAPIView,UpdateUserProfileAPIView,GetUserByTokenAPIView,NearbyProfilesAPIView,SomeProtectedAPIView,FilteredUserProfileAPIView,SendRequestAPIView,UploadUserImagesAPIView,ProfileUpdateAPIView,RequestSMSCodeView, VerifySMSCodeView,LoginView,ForgotPasswordRequestAPIView,VerifyCodeAPIView,ResetPasswordAPIView
 
 
 urlpatterns = [
-
+    path('regions/', RegionListAPIView.as_view(), name='regions'),
+    path('districts/', DistrictListAPIView.as_view(), name='districts'),
     path('interests/', InterestListAPIView.as_view(), name='get_interests'),
     path('purposes/', PurposeListAPIView.as_view(), name='get_purposes'),
     path('profile-datas/', GetUserByTokenAPIView.as_view(), name='get_data_profile'),
