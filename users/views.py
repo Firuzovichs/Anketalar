@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.utils import timezone
 from datetime import timedelta,date
-from .models import CustomUser,UserProfile,Purpose,Interest,UserImage,UserProfileExtension
+from .models import CustomUser,UserProfile,Purpose,Interest,UserImage,UserProfileExtension,Region,District
 import random
 import secrets
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -127,7 +127,7 @@ class UserImageAPIView(APIView):
             return Response({"message": "Rasm foydalanuvchidan uzildi.", "id": img_id})
 
         return Response({"message": "Hech qanday amal bajarilmadi."})
-
+    
 class UpdateUserProfileAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -135,16 +135,14 @@ class UpdateUserProfileAPIView(APIView):
         """
         Foydalanuvchini JWT yoki user_token orqali aniqlaydi
         """
-        # 1️⃣ Avval JWT orqali tekshiramiz
         auth = JWTAuthentication()
         try:
             user, _ = auth.authenticate(request)
             if user:
                 return user
         except AuthenticationFailed:
-            pass  # JWT xato bo‘lsa, user_token orqali davom etamiz
+            pass  
 
-        # 2️⃣ Keyin user_token orqali
         query_token = request.query_params.get("user_token")
         token = query_token.strip() if query_token else None
         if not token:
@@ -191,15 +189,32 @@ class UpdateUserProfileAPIView(APIView):
 
         # --------- PROFILE FIELDS ----------
         profile_fields = [
-            "birth_year", "gender", "region", "district",
-            "latitude", "longitude", "weight", "height",
-            "bio", "telegram_link", "instagram_link", "tiktok_link"
+            "birth_year", "gender", "latitude", "longitude",
+            "weight", "height", "bio", 
+            "telegram_link", "instagram_link", "tiktok_link"
         ]
 
         for field in profile_fields:
             if field in data:
                 setattr(profile, field, data.get(field))
                 updated_fields.append(field)
+
+        # --------- REGION & DISTRICT (IDs orqali) ----------
+        region_id = data.get("region")
+        if region_id:
+            region = Region.objects.filter(id=region_id).first()
+            if not region:
+                return Response({"error": "Region topilmadi."}, status=status.HTTP_400_BAD_REQUEST)
+            profile.region = region
+            updated_fields.append("region")
+
+        district_id = data.get("district")
+        if district_id:
+            district = District.objects.filter(id=district_id).first()
+            if not district:
+                return Response({"error": "District topilmadi."}, status=status.HTTP_400_BAD_REQUEST)
+            profile.district = district
+            updated_fields.append("district")
 
         # --------- PURPOSES (ManyToMany) ----------
         if "purposes" in data:
@@ -227,6 +242,7 @@ class UpdateUserProfileAPIView(APIView):
             "message": "Maʼlumotlar muvaffaqiyatli yangilandi.",
             "updated_fields": updated_fields
         }, status=status.HTTP_200_OK)
+
 
 
 
