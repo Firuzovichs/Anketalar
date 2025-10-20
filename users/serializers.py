@@ -49,11 +49,14 @@ class FullUserProfileSerializer(serializers.ModelSerializer):
             'user', 'birth_year', 'gender', 'weight','height','region', 'district', 'latitude', 'longitude',
             'purposes', 'interests', 'images','bio', 'instagram_link', 'telegram_link','tiktok_link'
         ]
-
 class UserProfileSerializer(serializers.ModelSerializer):
     purposes = PurposeSerializer(many=True, read_only=True)
     interests = InterestSerializer(many=True, read_only=True)
     images = UserImageSerializer(many=True, read_only=True)
+
+    # 🔹 Soddalashtirilgan ko‘rinish:
+    region = serializers.SerializerMethodField()
+    district = serializers.SerializerMethodField()
 
     class Meta:
         model = UserProfile
@@ -76,6 +79,22 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'tiktok_link'
         ]
 
+    def get_region(self, obj):
+        if obj.region:
+            return {
+                "id": obj.region.id,
+                "name": obj.region.name
+            }
+        return None
+
+    def get_district(self, obj):
+        if obj.district:
+            return {
+                "id": obj.district.id,
+                "name": obj.district.name
+            }
+        return None
+    
 class CustomUserSerializer(serializers.ModelSerializer):
     profile = UserProfileSerializer(read_only=True)
 
