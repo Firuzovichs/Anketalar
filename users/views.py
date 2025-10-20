@@ -10,7 +10,7 @@ import random
 import secrets
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.shortcuts import get_object_or_404
-from .serializers import FullUserProfileSerializer,CustomUserSerializer  # Quyida serializerni ham yozamiz
+from .serializers import FullUserProfileSerializer,CustomUserSerializer,PurposeSerializer,InterestSerializer  # Quyida serializerni ham yozamiz
 from .functions import deduct_request_from_token,haversine_distance
 from rest_framework.permissions import IsAuthenticated, AllowAny
 import requests
@@ -23,6 +23,18 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 
 MAX_IMAGES_PER_USER = 5
+
+class PurposeListAPIView(APIView):
+    def get(self, request):
+        purposes = Purpose.objects.all()
+        serializer = PurposeSerializer(purposes, many=True, context ={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class InterestListAPIView(APIView):
+    def get(self, request):
+        interests = Interest.objects.all()
+        serializer = InterestSerializer(interests, many=True, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 class UserImageAPIView(APIView):
     permission_classes = [IsAuthenticated]

@@ -120,9 +120,9 @@ class UserImage(models.Model):
     user_profile = models.ForeignKey(
         UserProfile,
         on_delete=models.CASCADE,
-        null=True,  # 🔥 null bo‘lishiga ruxsat
+        null=True,  
         blank=True,
-        related_name='images'  # 🔥 formalar uchun
+        related_name='images' 
     )
     image = models.ImageField(upload_to=user_image_upload_path)
     is_main = models.BooleanField(default=False)
