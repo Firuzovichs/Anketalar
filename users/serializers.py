@@ -68,9 +68,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
     interests = InterestSerializer(many=True, read_only=True)
     images = UserImageSerializer(many=True, read_only=True)
 
-    # 🔹 Soddalashtirilgan ko‘rinish:
-    region = serializers.SerializerMethodField()
-    district = serializers.SerializerMethodField()
+    # 🔹 Bitta matn sifatida chiqadi
+    manzil = serializers.SerializerMethodField()
 
     class Meta:
         model = UserProfile
@@ -78,8 +77,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'id',
             'birth_year',
             'gender',
-            'region',
-            'district',
+            'manzil',
             'latitude',
             'longitude',
             'weight',
@@ -93,21 +91,12 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'tiktok_link'
         ]
 
-    def get_region(self, obj):
-        if obj.region:
-            return {
-                "id": obj.region.id,
-                "name": obj.region.name
-            }
-        return None
-
-    def get_district(self, obj):
-        if obj.district:
-            return {
-                "id": obj.district.id,
-                "name": obj.district.name
-            }
-        return None
+    def get_manzil(self, obj):
+        # 🔹 Region va district nomlarini bitta string qilib birlashtiramiz
+        if obj.region and obj.district:
+            return f"{obj.region.name}, {obj.district.name}"
+        else:
+            return "O‘zbekiston"
     
 class CustomUserSerializer(serializers.ModelSerializer):
     profile = UserProfileSerializer(read_only=True)
