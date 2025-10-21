@@ -20,27 +20,3 @@ def haversine_distance(lat1, lon1, lat2, lon2):
     distance = R * c
     return distance
 
-
-def deduct_request_from_token(token):
-    try:
-        # Foydalanuvchini token orqali topamiz
-        user = CustomUser.objects.get(token=token)
-        profile = user.profile
-        extension = profile.extension
-
-        # Har kuni yangilash kerak bo‘lsa, uni ham tekshirib yangilaymiz
-        extension.reset_requests_if_needed()
-
-        if extension.requests_left <= 0:
-            return Response({'detail': 'Request limit reached.'}, status=status.HTTP_429_TOO_MANY_REQUESTS)
-
-        # requests_left ni kamaytirish
-        extension.requests_left -= 1
-        extension.save()
-
-        return Response({'detail': 'Request counted successfully.', 'requests_left': extension.requests_left}, status=status.HTTP_200_OK)
-
-    except CustomUser.DoesNotExist:
-        return Response({'detail': 'Invalid token.'}, status=status.HTTP_401_UNAUTHORIZED)
-    except Exception as e:
-        return Response({'detail': f'Error: {str(e)}'}, status=status.HTTP_400_BAD_REQUEST)

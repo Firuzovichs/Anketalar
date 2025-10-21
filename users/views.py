@@ -11,7 +11,7 @@ import secrets
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.shortcuts import get_object_or_404
 from .serializers import FullUserProfileSerializer,CustomUserSerializer,PurposeSerializer,InterestSerializer,RegionSerializer,DistrictSerializer  # Quyida serializerni ham yozamiz
-from .functions import deduct_request_from_token,haversine_distance
+from .functions import haversine_distance
 from rest_framework.permissions import IsAuthenticated, AllowAny
 import requests
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED, HTTP_403_FORBIDDEN, HTTP_404_NOT_FOUND
@@ -331,11 +331,14 @@ class NearbyProfilesAPIView(APIView):
 class SomeProtectedAPIView(APIView):
     permission_classes = [IsAuthenticated]
     def get(self, request):
-        token = request.headers.get('Authorization')
+        token = request.query_params.get('token')
         if not token:
-            return Response({'detail': 'Token is required.'}, status=status.HTTP_401_UNAUTHORIZED)
-
-        return deduct_request_from_token(token)
+            return Response({'error': 'Token is required'}, status=status.HTTP_400_BAD_REQUEST)
+        user = CustomUser.objects.get(token=token)
+        if user.profile.extension.daily_requests_limit > 0:
+            return Response({'detail': 'Limit mavjud'},status=status.HTTP_200_OK)
+        else:
+            return Response({'detail': 'Limit mavjud emas '},status=status.HTTP_403_FORBIDDEN)
 
 
 class FilteredUserProfileAPIView(APIView):
