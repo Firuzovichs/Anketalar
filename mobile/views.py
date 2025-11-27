@@ -10,27 +10,7 @@ import requests
 from users.models import CustomUser, PendingUser, UserProfile, Purpose, Interest, UserImage, Region, District
 from django.db import transaction
 from django.contrib.auth.hashers import make_password
-
-
-
-def send_email_code(email, code):
-    subject = "Tasdiqlash kodi"
-    message = f"Sizning tasdiqlash kodingiz: {code}"
-    try:
-        send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [email])
-    except Exception as e:
-        print(f"Email yuborishda xatolik: {e}")
-
-def send_telegram_code(message, chat_ids=None):
-    if chat_ids is None:
-        chat_ids = [settings.TELEGRAM_USER_ID1]
-    for chat_id in chat_ids:
-        url = f"https://api.telegram.org/bot{settings.TELEGRAM_BOT_TOKEN}/sendMessage"
-        payload = {"chat_id": chat_id, "text": message}
-        try:
-            requests.post(url, json=payload)
-        except Exception as e:
-            print(f"Telegramga yuborishda xatolik: {e}")
+from users.functions import send_email_code, send_telegram_code
 
 class VerifyStartAPIView(APIView):
     def post(self, request):

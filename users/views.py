@@ -25,6 +25,7 @@ from datetime import datetime
 from django.core.mail import send_mail
 from django.conf import settings
 from django.db.models import Q
+from .functions import send_telegram_code, send_email_code  # send_email_code ham kerak bo‘ladi
 
 MAX_IMAGES_PER_USER = 5
 
@@ -555,8 +556,6 @@ class ResetPasswordAPIView(APIView):
 
         return Response({"message": "Parol muvaffaqiyatli yangilandi."}, status=status.HTTP_200_OK)
 
-
-
 class VerifyCodeAPIView(APIView):
     def post(self, request):
         data = request.data
@@ -564,23 +563,30 @@ class VerifyCodeAPIView(APIView):
         code = data.get("code")
 
         if not email_or_phone or not code:
-            return Response({"error": "Email/phone va kod kiritilishi kerak."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Email yoki telefon va kod kiritilishi kerak."}, status=status.HTTP_400_BAD_REQUEST)
 
+        # PendingUser dan topamiz
         try:
             if "@" in email_or_phone:
-                user = CustomUser.objects.get(email=email_or_phone)
+                pending_user = PendingUser.objects.get(email=email_or_phone)
             else:
-                user = CustomUser.objects.get(phone=email_or_phone)
-        except CustomUser.DoesNotExist:
-            return Response({"error": "Foydalanuvchi topilmadi."}, status=status.HTTP_404_NOT_FOUND)
+                pending_user = PendingUser.objects.get(phone=email_or_phone)
+        except PendingUser.DoesNotExist:
+            return Response({"error": "Foydalanuvchi yoki tasdiqlash kodi topilmadi."}, status=status.HTTP_404_NOT_FOUND)
 
-        if user.sms_code != code:
+        # Kodni tekshirish
+        if pending_user.code != code:
             return Response({"error": "Kod noto'g'ri."}, status=status.HTTP_400_BAD_REQUEST)
 
-        if timezone.now() > user.sms_code_expires:
+        # Amal qilish muddatini tekshirish
+        if pending_user.is_expired():
             return Response({"error": "Kodning amal qilish muddati tugagan."}, status=status.HTTP_400_BAD_REQUEST)
 
-        return Response({"message": "Kod to'g'ri. Endi parolni yangilash mumkin."})
+        # Tasdiqlash
+        pending_user.is_verified = True
+        pending_user.save()
+
+        return Response({"message": "Kod to'g'ri. Endi parolni yangilash yoki ro'yxatdan o'tish mumkin."})
     
 TELEGRAM_BOT_TOKEN = '7930208506:AAHUgWkZzjZYLG2Br9VQOsi-F8r6Aeg3i5g'
 TELEGRAM_USER_ID1 = 6264055381
@@ -598,36 +604,36 @@ class ForgotPasswordRequestAPIView(APIView):
         try:
             if "@" in email_or_phone:
                 user = CustomUser.objects.get(email=email_or_phone)
+                pending, _ = PendingUser.objects.update_or_create(
+                    email=email_or_phone,
+                    defaults={
+                        "code": f"{random.randint(100000, 999999)}",
+                        "code_expires": timezone.now() + timedelta(minutes=5),
+                        "is_verified": False
+                    }
+                )
+                send_email_code(email_or_phone, pending.code)
                 destination = "email"
             else:
                 user = CustomUser.objects.get(phone=email_or_phone)
+                pending, _ = PendingUser.objects.update_or_create(
+                    phone=email_or_phone,
+                    defaults={
+                        "code": f"{random.randint(100000, 999999)}",
+                        "code_expires": timezone.now() + timedelta(minutes=5),
+                        "is_verified": False
+                    }
+                )
+                message_text = f"Tasdiqlash kodi: {pending.code}"
+                send_telegram_code(message_text)
                 destination = "phone"
+
         except CustomUser.DoesNotExist:
             return Response({"error": "Bunday foydalanuvchi topilmadi."}, status=status.HTTP_404_NOT_FOUND)
 
-        code = f"{random.randint(100000, 999999)}"
-        user.sms_code = code
-        user.sms_code_expires = timezone.now() + timedelta(minutes=5)
-        user.save()
-
-        # Kodni Telegram orqali yuborish
-        message_text = f"Tasdiqlash kodi: {code}"
-        send_telegram_code(message_text)
-
-        return Response({"message": f"Tasdiqlash kodi {destination} orqali yuborildi va Telegramga ham jo‘natildi."})
+        return Response({"message": f"Tasdiqlash kodi {destination} orqali yuborildi."})
 
 
-
-def send_telegram_code(message):
-    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
-    payload = {
-        "chat_id": TELEGRAM_USER_ID1,
-        "text": message
-    }
-    try:
-        requests.post(url, json=payload)
-    except Exception as e:
-        print(f"Telegramga yuborishda xatolik: {e}")
 
 class LoginView(APIView):
     def post(self, request):
