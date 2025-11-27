@@ -1,6 +1,6 @@
 
 from django.urls import path
-from .views import RegionListAPIView,DistrictListAPIView,InterestListAPIView,PurposeListAPIView,UserImageAPIView,UpdateUserProfileAPIView,GetUserByTokenAPIView,NearbyProfilesAPIView,SomeProtectedAPIView,FilteredUserProfileAPIView,SendRequestAPIView,UploadUserImagesAPIView,ProfileUpdateAPIView,RequestSMSCodeView, VerifySMSCodeView,LoginView,ForgotPasswordRequestAPIView,VerifyCodeAPIView,ResetPasswordAPIView
+from .views import MatchUserView,RegionListAPIView,DistrictListAPIView,InterestListAPIView,PurposeListAPIView,UserImageAPIView,UpdateUserProfileAPIView,GetUserByTokenAPIView,NearbyProfilesAPIView,SomeProtectedAPIView,SendRequestAPIView,UploadUserImagesAPIView,ProfileUpdateAPIView,RequestSMSCodeView, VerifySMSCodeView,LoginView,ForgotPasswordRequestAPIView,VerifyCodeAPIView,ResetPasswordAPIView
 
 
 urlpatterns = [
@@ -20,7 +20,7 @@ urlpatterns = [
     path('auth/profile/update-datas/', ProfileUpdateAPIView.as_view(), name='profile_update'),
     path('auth/profile/upload-images/', UploadUserImagesAPIView.as_view(), name='update_images'),
     path('auth/profile/send-request/', SendRequestAPIView.as_view(), name='send_request'),
-    path('search/profile', FilteredUserProfileAPIView.as_view(), name='search_profile'),
     path('check/limit/', SomeProtectedAPIView.as_view(), name='limittekshirish'),
     path('search/bylatlong/', NearbyProfilesAPIView.as_view(), name='latlongbilanqidirish'),
+    path('search/byprofile/', MatchUserView.as_view(), name='search-byprofile')
 ]

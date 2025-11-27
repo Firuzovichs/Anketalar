@@ -4,6 +4,7 @@ from rest_framework import serializers
 from .models import CustomUser,UserImage,Purpose,Interest,UserProfile,UserProfileExtension,Region,District
 
 
+
 class RegionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Region
@@ -115,3 +116,41 @@ class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = ['uuid', 'name', 'phone', 'email', 'token', 'profile']
+
+
+class MatchedUserSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(read_only=True)
+    image = serializers.SerializerMethodField()
+    region = serializers.SerializerMethodField()
+    district = serializers.SerializerMethodField()
+    purposes = serializers.SerializerMethodField()
+    interests = serializers.SerializerMethodField()
+
+    class Meta:
+        model = UserProfile
+        fields = [
+            "id",
+            "image",
+            "region",
+            "district",
+            "weight",
+            "height",
+            "purposes",
+            "interests",
+        ]
+
+    def get_image(self, obj):
+        main_image = obj.images.filter(is_main=True).first()
+        return main_image.image.url if main_image else None
+
+    def get_region(self, obj):
+        return obj.region.name if obj.region else None
+
+    def get_district(self, obj):
+        return obj.district.name if obj.district else None
+
+    def get_purposes(self, obj):
+        return [p.title for p in obj.purposes.all()]
+
+    def get_interests(self, obj):
+        return [i.title for i in obj.interests.all()]

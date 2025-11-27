@@ -5,12 +5,12 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.utils import timezone
 from datetime import timedelta,date
-from .models import CustomUser,UserProfile,Purpose,Interest,UserImage,UserProfileExtension,Region,District
+from .models import CustomUser,UserProfile,Purpose,Interest,UserImage,UserProfileExtension,Region,District,PendingUser
 import random
 import secrets
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.shortcuts import get_object_or_404
-from .serializers import FullUserProfileSerializer,CustomUserSerializer,PurposeSerializer,InterestSerializer,RegionSerializer,DistrictSerializer  # Quyida serializerni ham yozamiz
+from .serializers import FullUserProfileSerializer,MatchedUserSerializer,CustomUserSerializer,PurposeSerializer,InterestSerializer,RegionSerializer,DistrictSerializer  # Quyida serializerni ham yozamiz
 from .functions import haversine_distance
 from rest_framework.permissions import IsAuthenticated, AllowAny
 import requests
@@ -21,9 +21,76 @@ from django.db import transaction
 from django.core.exceptions import ValidationError
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.exceptions import AuthenticationFailed
+from datetime import datetime
+from django.core.mail import send_mail
+from django.conf import settings
+from django.db.models import Q
 
 MAX_IMAGES_PER_USER = 5
 
+
+class MatchUserView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+
+        try:
+            profile = user.profile
+            extension = profile.extension
+        except Exception:
+            return Response({"detail": "Profil topilmadi."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Kunlik limit
+        extension.reset_requests_if_needed()
+        if extension.requests_left <= 0:
+            return Response({"detail": "Kunlik limit tugagan."}, status=status.HTTP_403_FORBIDDEN)
+
+        if not profile.gender:
+            return Response({"detail": "Jins aniqlanmagan."}, status=status.HTTP_400_BAD_REQUEST)
+
+        opposite_gender = "female" if profile.gender == "male" else "male"
+        current_year = datetime.now().year
+        user_age = current_year - profile.birth_year if profile.birth_year else None
+
+        min_age, max_age = 18, user_age if user_age else 45
+        min_birth_year = current_year - max_age
+        max_birth_year = current_year - min_age
+
+        # Q object yordamida shartlarni optional qilish
+        filters = Q(gender=opposite_gender) & Q(birth_year__range=(min_birth_year, max_birth_year))
+
+        region_filter = Q(region=profile.region) if profile.region else Q()
+        district_filter = Q(district=profile.district) if profile.district else Q()
+
+        # purposes va interests optional
+        purposes_filter = Q()
+        if profile.purposes.exists():
+            purposes_filter = Q(purposes__in=profile.purposes.all())
+
+        interests_filter = Q()
+        if profile.interests.exists():
+            interests_filter = Q(interests__in=profile.interests.all())
+
+        # Har bir filter optional OR bilan birlashtiramiz
+        queryset = UserProfile.objects.filter(
+            filters & (region_filter | district_filter | purposes_filter | interests_filter)
+        ).distinct().exclude(id=profile.id)
+
+        match_user = queryset.order_by("?").first()
+        if not match_user:
+            return Response({"detail": "Mos foydalanuvchi topilmadi."}, status=status.HTTP_404_NOT_FOUND)
+
+        extension.requests_left -= 1
+        extension.save()
+
+        serializer = MatchedUserSerializer(match_user)
+        data = {
+            "token": user.token,
+            "matched_user": serializer.data
+        }
+
+        return Response(data, status=status.HTTP_200_OK)
 
 class RegionListAPIView(APIView):
     """
@@ -341,60 +408,6 @@ class SomeProtectedAPIView(APIView):
             return Response({'detail': 'Limit mavjud emas '},status=status.HTTP_403_FORBIDDEN)
 
 
-class FilteredUserProfileAPIView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request):
-        
-
-        user = request.user  
-
-        if not user.is_authenticated:
-            return Response({'detail': 'User is not authenticated.'}, status=status.HTTP_401_UNAUTHORIZED)
-
-        # endi user orqali profilni, extensionni va hokazolarni olishingiz mumkin:
-        try:
-            profile = user.profile
-        except:
-            return Response({'detail': 'Profile or extension not found.'}, status=status.HTTP_400_BAD_REQUEST)
-
-
-        # Age filter
-        min_age = int(request.query_params.get('min_age', 0))
-        max_age = int(request.query_params.get('max_age', 100))
-        current_year = date.today().year
-        min_birth_year = current_year - max_age
-        max_birth_year = current_year - min_age
-
-        queryset = UserProfile.objects.filter(
-            birth_year__gte=min_birth_year,
-            birth_year__lte=max_birth_year
-        ).exclude(user=user)
-
-        # Purpose filter
-        purpose_ids = request.query_params.getlist('purposes')
-        if purpose_ids:
-            queryset = queryset.filter(purposes__id__in=purpose_ids).distinct()
-
-        # Interest filter
-        interest_ids = request.query_params.getlist('interests')
-        if interest_ids:
-            queryset = queryset.filter(interests__id__in=interest_ids).distinct()
-
-        # Region/District
-        region = request.query_params.get('region')
-        if region:
-            queryset = queryset.filter(region__iexact=region)
-
-        district = request.query_params.get('district')
-        if district:
-            queryset = queryset.filter(district__iexact=district)
-
-        # === PAGINATION ===
-        paginator = UserProfilePagination()
-        paginated_queryset = paginator.paginate_queryset(queryset, request)
-        serializer = FullUserProfileSerializer(paginated_queryset, many=True, context={'request': request})
-        return paginator.get_paginated_response(serializer.data)
 
 
 class SendRequestAPIView(APIView):
@@ -602,6 +615,8 @@ class ForgotPasswordRequestAPIView(APIView):
         send_telegram_code(message_text)
 
         return Response({"message": f"Tasdiqlash kodi {destination} orqali yuborildi va Telegramga ham jo‘natildi."})
+
+
 
 def send_telegram_code(message):
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"

@@ -29,8 +29,26 @@ DEBUG = config('DEBUG', cast=bool)
 
 ALLOWED_HOSTS = ['.wellmay.uz', 'wellmay.uz', 'www.wellmay.uz', 'localhost', '127.0.0.1', '[::1]']
 
-SECURE_SSL_REDIRECT = False
 
+TELEGRAM_BOT_TOKEN = config("TELEGRAM_BOT_TOKEN")
+TELEGRAM_USER_ID1 = config("TELEGRAM_USER_ID1")
+TELEGRAM_USER_ID2 = config("TELEGRAM_USER_ID2")
+
+
+####### Email kod jo'natish sozlamalari#######################
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = config("EMAIL_HOST", default="smtp.gmail.com")
+EMAIL_PORT = config("EMAIL_PORT", cast=int, default=587)
+EMAIL_USE_TLS = config("EMAIL_USE_TLS", cast=bool, default=True)
+EMAIL_HOST_USER = config("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD")
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+####################################################
+
+
+
+########### SSL sertifikat uchun #############
+SECURE_SSL_REDIRECT = False
 CSRF_COOKIE_SECURE = False  # dev uchun
 SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_HTTPONLY = True
@@ -43,8 +61,9 @@ CSRF_TRUSTED_ORIGINS = [
     'http://localhost:8081',
     'http://localhost:8080'
 ]
-# Application definition
+####################################################
 
+############### app lar ####################
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -55,6 +74,8 @@ INSTALLED_APPS = [
     'users',
     'corsheaders',
 ]
+####################################################
+
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',

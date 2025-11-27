@@ -9,8 +9,29 @@ from .models import (
     Interest,
     UserProfileExtension,
     Region,
-    District
+    District,
+    PendingUser
 )
+
+
+@admin.register(PendingUser)
+class PendingUserAdmin(admin.ModelAdmin):
+    list_display = ('id', 'email', 'phone', 'code', 'code_expires', 'created_at','is_verified')
+    list_filter = ('created_at',)
+    search_fields = ('email', 'phone', 'code')
+    readonly_fields = ('created_at',)
+
+    fieldsets = (
+        ("User Contact", {
+            "fields": ("email", "phone"),
+        }),
+        ("Verification", {
+            "fields": ("code", "code_expires"),
+        }),
+        ("System Info", {
+            "fields": ("created_at",),
+        }),
+    )
 
 
 # --- REGION ADMIN ---
@@ -86,6 +107,7 @@ class UserImageAdmin(admin.ModelAdmin):
 class UserAdmin(BaseUserAdmin):
     ordering = ['-created_at']
     list_display = ('email', 'name', 'phone', 'is_active', 'is_staff')
+    list_display_links = ('email', 'phone')
     list_filter = ('is_active', 'is_staff', 'created_at')
     search_fields = ('email', 'phone', 'name', 'uuid')
     readonly_fields = ('created_at', 'updated_at', 'uuid', 'token')

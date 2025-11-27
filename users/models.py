@@ -56,9 +56,9 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     phone = models.CharField(max_length=20, unique=True, db_index=True)
     email = models.EmailField(unique=True, db_index=True)
     password = models.CharField(max_length=255)
+
+    # token faqat foydalanuvchi identifikatori bo'lsa qoldiriladi
     token = models.CharField(max_length=255, unique=True, db_index=True)
-    sms_code = models.CharField(max_length=6, blank=True, null=True)
-    sms_code_expires = models.DateTimeField(blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -71,14 +71,11 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     objects = CustomUserManager()
 
-    def __str__(self):
-        return f"{self.name} ({self.email})"
-    
     def save(self, *args, **kwargs):
         if not self.token:
             self.token = secrets.token_hex(16)
         super().save(*args, **kwargs)
-        
+
     class Meta:
         indexes = [
             models.Index(fields=['email']),
@@ -87,6 +84,19 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
             models.Index(fields=['uuid']),
         ]
         ordering = ['-created_at']
+
+class PendingUser(models.Model):
+    email = models.EmailField(blank=True, null=True, unique=True)
+    phone = models.CharField(max_length=20, blank=True, null=True, unique=True)
+
+    code = models.CharField(max_length=6)
+    code_expires = models.DateTimeField()
+    is_verified = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def is_expired(self):
+        return timezone.now() > self.code_expires
 
 
 class Purpose(models.Model):
