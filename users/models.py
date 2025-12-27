@@ -86,8 +86,8 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         ordering = ['-created_at']
 
 class PendingUser(models.Model):
-    email = models.EmailField(blank=True, null=True, unique=True)
-    phone = models.CharField(max_length=20, blank=True, null=True, unique=True)
+    email = models.EmailField(blank=True, null=True)
+    phone = models.CharField(max_length=20, blank=True, null=True)
 
     code = models.CharField(max_length=6)
     code_expires = models.DateTimeField()
