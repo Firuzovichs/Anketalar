@@ -125,8 +125,8 @@ class RegisterAPIView(APIView):
         try:
             with transaction.atomic():
                 # CustomUser yaratish
-                email = pending_user.email if pending_user.email else ""
-                phone = pending_user.phone if pending_user.phone else ""
+                email = pending_user.email if pending_user.email else None
+                phone = pending_user.phone if pending_user.phone else None
                 user = CustomUser.objects.create(
                     email=email,
                     phone=phone,
