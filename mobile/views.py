@@ -57,13 +57,14 @@ class VerifyCheckAPIView(APIView):
                             status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            if "@" in email_or_phone:
-                pending = PendingUser.objects.get(email=email_or_phone)
-            else:
-                pending = PendingUser.objects.get(phone=email_or_phone)
+            pending = PendingUser.objects.filter(
+                Q(email=email_or_phone) | Q(phone=email_or_phone)
+            ).latest("created_at")
         except PendingUser.DoesNotExist:
-            return Response({"error": "Tasdiqlash jarayoni topilmadi."},
-                            status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"error": "Tasdiqlash jarayoni topilmadi."},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
         # Kod muddati tugaganmi
         if pending.is_expired():
