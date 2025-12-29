@@ -11,6 +11,7 @@ from users.models import CustomUser, PendingUser, UserProfile, Purpose, Interest
 from django.db import transaction
 from django.contrib.auth.hashers import make_password
 from users.functions import send_email_code, send_telegram_code
+from django.db.models import Q
 
 class VerifyStartAPIView(APIView):
     def post(self, request):
